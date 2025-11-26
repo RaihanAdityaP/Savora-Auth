@@ -13,28 +13,47 @@ function ConfirmContent() {
   
   const supabase = createClientComponentClient();
 
-  // Fungsi untuk membuka aplikasi Savora
+  // Fungsi untuk membuka aplikasi Savora (UPDATED - LEBIH RELIABLE)
   const openSavoraApp = () => {
-    // Deteksi Android
     const isAndroid = /Android/.test(navigator.userAgent);
     
-    // Deep Link untuk APK Android (ganti sesuai deep link app)
-    const deepLink = 'savora://home/';
+    // Intent Scheme - Lebih reliable untuk Android
+    const intentUrl = 'intent://home/#Intent;scheme=savora;package=id.savora.app;end';
     
-    // Web fallback - akan dibuka di browser
+    // Web fallback
     const webUrl = 'https://savora-nine.vercel.app/';
     
     if (isAndroid) {
-      // Coba buka APK pakai deep link
-      window.location.href = deepLink;
-      
-      // Jika APK tidak terinstall, buka web setelah 1.5 detik
-      setTimeout(() => {
-        if (document.hidden) return; // Jika APK terbuka, jangan lanjut
+      try {
+        // Gunakan Intent Scheme untuk membuka aplikasi
+        window.location.href = intentUrl;
+        
+        // Track jika app berhasil dibuka
+        let appOpened = false;
+        
+        const checkAppOpened = () => {
+          if (document.visibilityState === 'hidden') {
+            appOpened = true;
+          }
+        };
+        
+        document.addEventListener('visibilitychange', checkAppOpened);
+        
+        // Fallback ke web setelah 3 detik jika app tidak terbuka
+        setTimeout(() => {
+          document.removeEventListener('visibilitychange', checkAppOpened);
+          if (!appOpened && !document.hidden) {
+            window.location.href = webUrl;
+          }
+        }, 3000);
+        
+      } catch (e) {
+        // Jika error, langsung buka web
+        console.error('Error opening app:', e);
         window.location.href = webUrl;
-      }, 1500);
+      }
     } else {
-      // Bukan Android (Desktop/Tablet): langsung buka web
+      // Bukan Android (Desktop/iOS): langsung buka web
       window.location.href = webUrl;
     }
   };
@@ -116,7 +135,7 @@ function ConfirmContent() {
                 Verifikasi Berhasil!
               </h2>
               <p className="text-gray-600 mb-4">{message}</p>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 mb-2">
                 Membuka aplikasi Savora dalam {countdown} detik...
               </p>
               <button
@@ -125,6 +144,9 @@ function ConfirmContent() {
               >
                 Buka Sekarang
               </button>
+              <p className="text-xs text-gray-400 mt-4">
+                Jika aplikasi tidak terbuka otomatis, klik tombol di atas
+              </p>
             </div>
           )}
 
