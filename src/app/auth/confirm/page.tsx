@@ -9,8 +9,35 @@ function ConfirmContent() {
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('Memverifikasi email Anda...');
+  const [countdown, setCountdown] = useState(3);
   
   const supabase = createClientComponentClient();
+
+  // Fungsi untuk membuka aplikasi Savora
+  const openSavoraApp = () => {
+    // Deteksi Android
+    const isAndroid = /Android/.test(navigator.userAgent);
+    
+    // Deep Link untuk APK Android (ganti sesuai deep link app)
+    const deepLink = 'savora://home';
+    
+    // Web fallback - akan dibuka di browser
+    const webUrl = 'https://savora-nine.vercel.app/';
+    
+    if (isAndroid) {
+      // Coba buka APK pakai deep link
+      window.location.href = deepLink;
+      
+      // Jika APK tidak terinstall, buka web setelah 1.5 detik
+      setTimeout(() => {
+        if (document.hidden) return; // Jika APK terbuka, jangan lanjut
+        window.location.href = webUrl;
+      }, 1500);
+    } else {
+      // Bukan Android (Desktop/Tablet): langsung buka web
+      window.location.href = webUrl;
+    }
+  };
 
   useEffect(() => {
     const confirmEmail = async () => {
@@ -39,11 +66,6 @@ function ConfirmContent() {
         // Berhasil
         setStatus('success');
         setMessage('Email berhasil diverifikasi!');
-        
-        // Redirect ke dashboard setelah 2 detik
-        setTimeout(() => {
-          router.push('/dashboard');
-        }, 2000);
 
       } catch (error) {
         setStatus('error');
@@ -52,15 +74,30 @@ function ConfirmContent() {
     };
 
     confirmEmail();
-  }, [searchParams, supabase, router]);
+  }, [searchParams, supabase]);
+
+  // Countdown dan redirect ke Savora App
+  useEffect(() => {
+    if (status === 'success') {
+      if (countdown > 0) {
+        const timer = setTimeout(() => {
+          setCountdown(countdown - 1);
+        }, 1000);
+        return () => clearTimeout(timer);
+      } else {
+        // Buka aplikasi Savora setelah countdown selesai
+        openSavoraApp();
+      }
+    }
+  }, [status, countdown]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50 p-4">
       <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
         <div className="text-center">
           {status === 'loading' && (
             <div>
-              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-green-600 mx-auto mb-4"></div>
               <h2 className="text-2xl font-semibold text-gray-800 mb-2">
                 Memverifikasi...
               </h2>
@@ -79,7 +116,15 @@ function ConfirmContent() {
                 Verifikasi Berhasil!
               </h2>
               <p className="text-gray-600 mb-4">{message}</p>
-              <p className="text-sm text-gray-500">Mengalihkan ke dashboard...</p>
+              <p className="text-sm text-gray-500">
+                Membuka aplikasi Savora dalam {countdown} detik...
+              </p>
+              <button
+                onClick={openSavoraApp}
+                className="mt-4 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              >
+                Buka Sekarang
+              </button>
             </div>
           )}
 
@@ -93,7 +138,13 @@ function ConfirmContent() {
               <h2 className="text-2xl font-semibold text-gray-800 mb-2">
                 Verifikasi Gagal
               </h2>
-              <p className="text-gray-600">{message}</p>
+              <p className="text-gray-600 mb-4">{message}</p>
+              <button
+                onClick={() => router.push('/login')}
+                className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Kembali ke Login
+              </button>
             </div>
           )}
         </div>
@@ -105,8 +156,8 @@ function ConfirmContent() {
 export default function ConfirmPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-green-600"></div>
       </div>
     }>
       <ConfirmContent />
