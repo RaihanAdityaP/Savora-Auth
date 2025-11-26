@@ -13,47 +13,77 @@ function ConfirmContent() {
   
   const supabase = createClientComponentClient();
 
-  // Fungsi untuk membuka aplikasi Savora (UPDATED - LEBIH RELIABLE)
+  // Fungsi untuk membuka aplikasi Savora (UPDATED - PAKAI DEEP LINK BIASA)
   const openSavoraApp = () => {
     const isAndroid = /Android/.test(navigator.userAgent);
     
-    // Intent Scheme - Lebih reliable untuk Android
-    const intentUrl = 'intent://home/#Intent;scheme=savora;package=id.savora.app;end';
+    // Deep Link biasa (sesuai manifest)
+    const deepLink = 'savora://home/';
     
     // Web fallback
     const webUrl = 'https://savora-nine.vercel.app/';
     
     if (isAndroid) {
-      try {
-        // Gunakan Intent Scheme untuk membuka aplikasi
-        window.location.href = intentUrl;
+      // Method 1: Pakai iframe (lebih reliable di beberapa browser)
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      iframe.style.width = '0';
+      iframe.style.height = '0';
+      iframe.src = deepLink;
+      document.body.appendChild(iframe);
+      
+      // Hapus iframe setelah 500ms
+      setTimeout(() => {
+        if (iframe.parentNode) {
+          document.body.removeChild(iframe);
+        }
+      }, 500);
+      
+      // Track jika app berhasil dibuka
+      let appOpened = false;
+      let blurTime = 0;
+      
+      const onBlur = () => {
+        blurTime = Date.now();
+      };
+      
+      const onFocus = () => {
+        const focusTime = Date.now();
+        if (focusTime - blurTime > 100) {
+          appOpened = true;
+        }
+      };
+      
+      const onVisibilityChange = () => {
+        if (document.hidden) {
+          appOpened = true;
+        }
+      };
+      
+      window.addEventListener('blur', onBlur);
+      window.addEventListener('focus', onFocus);
+      document.addEventListener('visibilitychange', onVisibilityChange);
+      
+      // Method 2: Direct window.location (backup)
+      setTimeout(() => {
+        if (!appOpened) {
+          window.location.href = deepLink;
+        }
+      }, 100);
+      
+      // Fallback ke web setelah 2.5 detik jika app tidak terbuka
+      setTimeout(() => {
+        window.removeEventListener('blur', onBlur);
+        window.removeEventListener('focus', onFocus);
+        document.removeEventListener('visibilitychange', onVisibilityChange);
         
-        // Track jika app berhasil dibuka
-        let appOpened = false;
-        
-        const checkAppOpened = () => {
-          if (document.visibilityState === 'hidden') {
-            appOpened = true;
-          }
-        };
-        
-        document.addEventListener('visibilitychange', checkAppOpened);
-        
-        // Fallback ke web setelah 3 detik jika app tidak terbuka
-        setTimeout(() => {
-          document.removeEventListener('visibilitychange', checkAppOpened);
-          if (!appOpened && !document.hidden) {
-            window.location.href = webUrl;
-          }
-        }, 3000);
-        
-      } catch (e) {
-        // Jika error, langsung buka web
-        console.error('Error opening app:', e);
-        window.location.href = webUrl;
-      }
+        if (!appOpened && !document.hidden) {
+          window.location.href = webUrl;
+        }
+      }, 2500);
+      
     } else {
-      // Bukan Android (Desktop/iOS): langsung buka web
+      // Bukan Android: langsung buka web
       window.location.href = webUrl;
     }
   };
@@ -142,10 +172,10 @@ function ConfirmContent() {
                 onClick={openSavoraApp}
                 className="mt-4 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
               >
-                Buka Sekarang
+                Buka Aplikasi
               </button>
               <p className="text-xs text-gray-400 mt-4">
-                Jika aplikasi tidak terbuka otomatis, klik tombol di atas
+                Pastikan aplikasi Savora sudah terinstall
               </p>
             </div>
           )}
