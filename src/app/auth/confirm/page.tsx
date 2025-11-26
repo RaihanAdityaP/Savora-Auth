@@ -19,7 +19,7 @@ function ConfirmContent() {
     const isAndroid = /Android/.test(navigator.userAgent);
     
     // Deep Link untuk APK Android (ganti sesuai deep link app)
-    const deepLink = 'savora://home';
+    const deepLink = 'savora://home/';
     
     // Web fallback - akan dibuka di browser
     const webUrl = 'https://savora-nine.vercel.app/';
