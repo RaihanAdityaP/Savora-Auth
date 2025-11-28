@@ -13,18 +13,21 @@ function ConfirmContent() {
   
   const supabase = createClientComponentClient();
 
-  // Fungsi untuk membuka aplikasi Savora (UPDATED - PAKAI DEEP LINK BIASA)
+  // Fungsi untuk membuka aplikasi Savora dengan Universal Link
   const openSavoraApp = () => {
     const isAndroid = /Android/.test(navigator.userAgent);
+    const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
     
-    // Deep Link biasa (sesuai manifest)
+    // Universal Link (sesuai Android Manifest: https://savora-nine.vercel.app/)
+    const universalLink = 'https://savora-nine.vercel.app/';
+    
+    // Deep Link fallback (sesuai manifest: savora://home)
     const deepLink = 'savora://home';
     
-    // Web fallback
-    const webUrl = 'https://savora-nine.vercel.app/';
-    
     if (isAndroid) {
-      // Method 1: Pakai iframe (lebih reliable di beberapa browser)
+      // ANDROID: Gunakan Universal Link (otomatis buka app jika terinstal, atau web jika tidak)
+      
+      // Method 1: Coba buka dengan deep link dulu (lebih cepat)
       const iframe = document.createElement('iframe');
       iframe.style.display = 'none';
       iframe.style.width = '0';
@@ -45,6 +48,7 @@ function ConfirmContent() {
       
       const onBlur = () => {
         blurTime = Date.now();
+        appOpened = true;
       };
       
       const onFocus = () => {
@@ -64,27 +68,28 @@ function ConfirmContent() {
       window.addEventListener('focus', onFocus);
       document.addEventListener('visibilitychange', onVisibilityChange);
       
-      // Method 2: Direct window.location (backup)
-      setTimeout(() => {
-        if (!appOpened) {
-          window.location.href = deepLink;
-        }
-      }, 100);
-      
-      // Fallback ke web setelah 2.5 detik jika app tidak terbuka
+      // Method 2: Fallback ke Universal Link setelah 1.5 detik
       setTimeout(() => {
         window.removeEventListener('blur', onBlur);
         window.removeEventListener('focus', onFocus);
         document.removeEventListener('visibilitychange', onVisibilityChange);
         
+        // Jika app tidak terbuka, gunakan Universal Link
+        // Universal Link akan:
+        // 1. Buka app jika terinstal (karena android:autoVerify="true" di manifest)
+        // 2. Buka web jika tidak terinstal
         if (!appOpened && !document.hidden) {
-          window.location.href = webUrl;
+          window.location.href = universalLink;
         }
-      }, 2500);
+      }, 1500);
+      
+    } else if (isIOS) {
+      // iOS: Gunakan Universal Link (otomatis handled oleh iOS)
+      window.location.href = universalLink;
       
     } else {
-      // Bukan Android: langsung buka web
-      window.location.href = webUrl;
+      // Desktop/Other: Langsung ke web
+      window.location.href = universalLink;
     }
   };
 
@@ -172,10 +177,11 @@ function ConfirmContent() {
                 onClick={openSavoraApp}
                 className="mt-4 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
               >
-                Buka Aplikasi
+                Buka Aplikasi Sekarang
               </button>
               <p className="text-xs text-gray-400 mt-4">
-                Pastikan aplikasi Savora sudah terinstall
+                Jika app terinstal, akan otomatis terbuka.<br/>
+                Jika tidak, akan dibuka di browser.
               </p>
             </div>
           )}
