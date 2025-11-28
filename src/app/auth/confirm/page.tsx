@@ -18,7 +18,7 @@ function ConfirmContent() {
     const isAndroid = /Android/.test(navigator.userAgent);
     
     // Deep Link biasa (sesuai manifest)
-    const deepLink = 'savora://home/';
+    const deepLink = 'savora://home';
     
     // Web fallback
     const webUrl = 'https://savora-nine.vercel.app/';
