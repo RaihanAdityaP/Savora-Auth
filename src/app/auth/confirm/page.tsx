@@ -13,21 +13,16 @@ function ConfirmContent() {
   
   const supabase = createClientComponentClient();
 
-  // Fungsi untuk membuka aplikasi Savora dengan Universal Link
+  // Fungsi untuk membuka aplikasi Savora dengan Deep Link saja
   const openSavoraApp = () => {
     const isAndroid = /Android/.test(navigator.userAgent);
     const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
     
-    // Universal Link (sesuai Android Manifest: https://savora-nine.vercel.app/)
-    const universalLink = 'https://savora-nine.vercel.app/';
-    
-    // Deep Link fallback (sesuai manifest: savora://home)
+    // Deep Link saja (tanpa Universal Link)
     const deepLink = 'savora://home';
     
     if (isAndroid) {
-      // ANDROID: Gunakan Universal Link (otomatis buka app jika terinstal, atau web jika tidak)
-      
-      // Method 1: Coba buka dengan deep link dulu (lebih cepat)
+      // ANDROID: Coba buka dengan deep link
       const iframe = document.createElement('iframe');
       iframe.style.display = 'none';
       iframe.style.width = '0';
@@ -68,28 +63,30 @@ function ConfirmContent() {
       window.addEventListener('focus', onFocus);
       document.addEventListener('visibilitychange', onVisibilityChange);
       
-      // Method 2: Fallback ke Universal Link setelah 1.5 detik
+      // Setelah 2 detik, cek apakah app terbuka
       setTimeout(() => {
         window.removeEventListener('blur', onBlur);
         window.removeEventListener('focus', onFocus);
         document.removeEventListener('visibilitychange', onVisibilityChange);
         
-        // Jika app tidak terbuka, gunakan Universal Link
-        // Universal Link akan:
-        // 1. Buka app jika terinstal (karena android:autoVerify="true" di manifest)
-        // 2. Buka web jika tidak terinstal
+        // Jika app tidak terbuka, tampilkan pesan
         if (!appOpened && !document.hidden) {
-          window.location.href = universalLink;
+          setMessage('App tidak terdeteksi. Pastikan Savora sudah terinstall.');
         }
-      }, 1500);
+      }, 2000);
       
     } else if (isIOS) {
-      // iOS: Gunakan Universal Link (otomatis handled oleh iOS)
-      window.location.href = universalLink;
+      // iOS: Coba buka dengan deep link
+      window.location.href = deepLink;
+      
+      // Fallback jika app tidak terbuka setelah 2 detik
+      setTimeout(() => {
+        setMessage('App tidak terdeteksi. Pastikan Savora sudah terinstall.');
+      }, 2000);
       
     } else {
-      // Desktop/Other: Langsung ke web
-      window.location.href = universalLink;
+      // Desktop/Other: Tampilkan pesan
+      setMessage('Buka aplikasi Savora di perangkat mobile Anda.');
     }
   };
 
@@ -180,8 +177,8 @@ function ConfirmContent() {
                 Buka Aplikasi Sekarang
               </button>
               <p className="text-xs text-gray-400 mt-4">
-                Jika app terinstal, akan otomatis terbuka.<br/>
-                Jika tidak, akan dibuka di browser.
+                Jika aplikasi tidak terbuka otomatis,<br/>
+                pastikan Savora sudah terinstall di perangkat Anda.
               </p>
             </div>
           )}
