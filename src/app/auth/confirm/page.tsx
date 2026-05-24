@@ -11,7 +11,7 @@ function ConfirmContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
-  const [message, setMessage] = useState('Memverifikasi email Anda...');
+  const [message, setMessage] = useState('Verifying your email...');
   const [countdown, setCountdown] = useState(3);
 
   const supabase = createClientComponentClient();
@@ -50,7 +50,6 @@ function ConfirmContent() {
       }, 2000);
 
     } else {
-      // Desktop: langsung ke fallback
       window.location.href = FALLBACK_URL;
     }
   };
@@ -62,7 +61,7 @@ function ConfirmContent() {
 
       if (!token_hash || type !== 'email') {
         setStatus('error');
-        setMessage('Link verifikasi tidak valid');
+        setMessage('Invalid verification link.');
         return;
       }
 
@@ -74,15 +73,15 @@ function ConfirmContent() {
 
         if (error) {
           setStatus('error');
-          setMessage(error.message || 'Gagal memverifikasi email');
+          setMessage(error.message || 'Failed to verify email.');
           return;
         }
 
         setStatus('success');
-        setMessage('Email berhasil diverifikasi!');
+        setMessage('Your email has been successfully verified!');
       } catch {
         setStatus('error');
-        setMessage('Terjadi kesalahan. Silakan coba lagi.');
+        setMessage('Something went wrong. Please try again.');
       }
     };
 
@@ -108,7 +107,7 @@ function ConfirmContent() {
           {status === 'loading' && (
             <div>
               <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-green-600 mx-auto mb-4"></div>
-              <h2 className="text-2xl font-semibold text-gray-800 mb-2">Memverifikasi...</h2>
+              <h2 className="text-2xl font-semibold text-gray-800 mb-2">Verifying...</h2>
               <p className="text-gray-600">{message}</p>
             </div>
           )}
@@ -120,20 +119,20 @@ function ConfirmContent() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h2 className="text-2xl font-semibold text-gray-800 mb-2">Verifikasi Berhasil!</h2>
+              <h2 className="text-2xl font-semibold text-gray-800 mb-2">Verification Successful!</h2>
               <p className="text-gray-600 mb-4">{message}</p>
               <p className="text-sm text-gray-500 mb-2">
-                Membuka aplikasi Savora dalam {countdown} detik...
+                Opening Savora app in {countdown} second{countdown !== 1 ? 's' : ''}...
               </p>
               <button
                 onClick={openSavoraApp}
                 className="mt-4 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
               >
-                Buka Aplikasi Sekarang
+                Open App Now
               </button>
               <p className="text-xs text-gray-400 mt-4">
-                Jika aplikasi tidak terinstall,<br />
-                Anda akan diarahkan ke halaman web.
+                If the app is not installed,<br />
+                you will be redirected to the web page.
               </p>
             </div>
           )}
@@ -145,15 +144,13 @@ function ConfirmContent() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </div>
-              <h2 className="text-2xl font-semibold text-gray-800 mb-2">Verifikasi Gagal</h2>
+              <h2 className="text-2xl font-semibold text-gray-800 mb-2">Verification Failed</h2>
               <p className="text-gray-600 mb-4">{message}</p>
               <button
-                onClick={() => {
-                  window.location.href = FALLBACK_URL;
-                }}
+                onClick={() => router.push('/login')}
                 className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
-                Kembali ke Login
+                Back to Login
               </button>
             </div>
           )}
